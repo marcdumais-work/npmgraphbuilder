@@ -5,7 +5,7 @@ var Promise = require('bluebird');
 module.exports = buildGraph;
 module.exports.isRemote = isRemote;
 
-function buildGraph(http, url) {
+function buildGraph(http, url, dev=false) {
   url = url || 'http://registry.npmjs.org/';
   if (url[url.length - 1] !== '/') {
     throw new Error('registry url is supposed to end with /');
@@ -113,6 +113,7 @@ function buildGraph(http, url) {
 
       // TODO: here is a good place to address https://github.com/anvaka/npmgraph.an/issues/4
       var dependencies = pkg.dependencies;
+      var devDependencies = pkg.devDependencies;
 
       graph.beginUpdate();
 
@@ -134,6 +135,10 @@ function buildGraph(http, url) {
         Object.keys(dependencies).forEach(addToQueue);
       }
 
+      if (dev && devDependencies) {
+        Object.keys(devDependencies).forEach(addToQueueDev);
+      }
+
       function addToQueue(name) {
           queue.push({
             name: name,
@@ -141,6 +146,13 @@ function buildGraph(http, url) {
             parent: id
           })
         }
+     function addToQueueDev(name) {
+          queue.push({
+            name: name,
+            version: devDependencies[name],
+            parent: id
+          })
+        }   
     }
   }
 }
